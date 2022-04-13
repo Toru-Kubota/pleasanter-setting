@@ -1,0 +1,19 @@
+---
+install_packages_list:
+- "dotnet-sdk-6.0"
+- "libgdiplus"
+- "postgresql"
+- "nginx"
+- "postgresql14-server"
+- "postgresql14-contrib"
+- "python3-devel"
+- "libpq-devel"
+
+systemd_enable_list:
+- "postgresql-14"
+- "nginx"
+- "pleasanter"
+postgres_user_pass: "password"
+postgres_db_pass: "password"
+pg_allowed_ipaddress: "192.168.1.0/24"
+server_name: "192.168.1.1"

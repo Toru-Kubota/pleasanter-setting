@@ -1,0 +1,12 @@
+{
+    "Dbms": "PostgreSQL",
+    "Provider": "Local",
+    "TimeZoneInfo": "Asia/Tokyo",
+    "SaConnectionString":"Server=localhost;Port=5432;Database=postgres;UID=postgres;PWD={{postgres_db_pass}}",
+    "OwnerConnectionString":"Server=localhost;Port=5432;Database=#ServiceName#;UID=#ServiceName#_Owner;PWD=SetAdminsPWD",
+    "UserConnectionString":"Server=localhost;Port=5432;Database=#ServiceName#;UID=#ServiceName#_User;PWD=SetUsersPWD",
+    "SqlCommandTimeOut": 600,
+    "MinimumTime": 3,
+    "DeadlockRetryCount": 4,
+    "DeadlockRetryInterval": 1000
+}

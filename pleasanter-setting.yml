@@ -1,0 +1,158 @@
+---
+- hosts: plesanter_server
+
+  tasks:
+
+  - name: install repository
+    yum: 
+      name: "{{item}}"
+      state: present
+      disable_gpg_check: yes
+    loop:
+      - "https://packages.microsoft.com/config/centos/8/packages-microsoft-prod.rpm"
+      - "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
+      - "https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+
+  - name: disable postgresql
+    shell: "dnf module -y disable postgresql"
+
+  - name: install module
+    yum: 
+      name: "{{item}}"
+      state: present
+    loop: "{{install_packages_list}}"
+
+  - name: upgrade pip
+    pip:
+      name: pip
+      extra_args: --upgrade
+
+  - name: install psycopg2
+    pip:
+      name: psycopg2
+
+  - name: check data
+    shell: "test -d /var/lib/pgsql/14/data/log;echo $?"
+    register: show_dir
+
+  - name: init database 
+    shell: "/usr/pgsql-14/bin/postgresql-14-setup initdb"
+    when: show_dir.stdout.find("0") == -1
+
+  - name: copy pg_hba.conf 
+    template:
+      src: ./files/pg_hba.conf.j2
+      dest: /var/lib/pgsql/14/data/pg_hba.conf 
+      owner: postgres
+      group: postgres
+      mode: 0600
+
+  - name: copy postgresql.conf
+    template:
+      src: ./files/postgresql.conf.j2
+      dest: /var/lib/pgsql/14/data/postgresql.conf
+      owner: postgres
+      group: postgres
+      mode: 0600
+
+  - name: systemd restart postgresql
+    systemd:
+      name: "{{item}}"
+      state: restarted
+    loop: 
+      - "postgresql-14"
+
+  - name: change postgres user password 
+    shell: "echo {{postgres_user_pass}} | passwd --stdin postgres"
+
+  - name: change postgres user password
+    postgresql_user:
+      name: postgres
+      password: "{{postgres_db_pass}}" 
+    become: yes
+    become_user: postgres
+
+  - name: check database
+    shell: echo "select datname from pg_database;" | psql -U postgres
+    register: show_db
+    become: yes
+    become_user: postgres
+
+  - name: create database 
+    postgresql_db:
+      name: "\"Implem.Pleasanter\""
+      state: present
+    become: yes
+    become_user: postgres
+    when: show_db.stdout.find("Implem.Pleasanter") == -1
+
+  - name: Adds pg_trgm extension to the database Implem.Pleasanter
+    postgresql_ext:
+      name: pg_trgm
+      db: "Implem.Pleasanter"
+    become: yes
+    become_user: postgres
+
+  - name: systemd restart postgresql
+    systemd:
+      name: "{{item}}"
+      state: restarted
+    loop: 
+      - "postgresql-14"
+
+  - name: mkdir /web direcrory
+    file: path=/web 
+      state=directory 
+      owner=root 
+      group=root 
+      mode=0731
+
+  - name: download & unarchive plesanter
+    unarchive:
+     src: https://github.com/Implem/Implem.Pleasanter.NetCore/releases/download/Pleasanter_1.3.4.0/Pleasanter_1.3.4.0.zip
+     dest: /web
+     remote_src: yes
+
+  - name: copy Rds.json
+    template:
+      src: ./files/Rds.json.j2
+      dest: /web/pleasanter/Implem.Pleasanter/App_Data/Parameters/Rds.json
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: run CodeDefiner
+    shell: dotnet /web/pleasanter/Implem.CodeDefiner/Implem.CodeDefiner.dll _rds
+
+  - name: copy pleasanter.service
+    template:
+      src: ./files/pleasanter.service.j2
+      dest: /etc/systemd/system/pleasanter.service 
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: reload & restart pleasanter.service
+    systemd:
+      state: restarted
+      daemon_reload: yes
+      name: pleasanter
+
+  - name: copy pleasanter.conf
+    template:
+      src: ./files/pleasanter.conf.j2
+      dest: /etc/nginx/conf.d/pleasanter.conf 
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: restart nginx.service
+    systemd:
+      state: restarted
+      name: nginx
+
+  - name: systemd enable.service
+    systemd:
+      name: "{{item}}"
+      enabled: yes
+    loop: "{{systemd_enable_list}}"
