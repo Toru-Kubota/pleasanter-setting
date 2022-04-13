@@ -3,6 +3,12 @@
 * AlmaLinux release 8.5
 
 ## Installation
+
+### Change OS security setting
+
+* disable SELinux 
+* open 80 port on firewalld
+
 ### Change following variable
 group_vars/plesanter_server.yml
 
