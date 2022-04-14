@@ -1,28 +1,24 @@
-# Install Pleasanter on Almalinux Server
-## Requirements
-* AlmaLinux release 8.5
+## Features
+Install Pleasanter for AlmaLinux 8
 
-## Installation
+## Require
+Ansible on AlmaLinux 8
 
-### Change OS security setting
+## Install
 
-* disable SELinux 
+Change OS security setting
+* disable SELinux
 * open 80 port on firewalld
 
-### Change following variable
-group_vars/plesanter_server.yml
+Set the following variables in **plesanter_server.yml**
+| variable| explanation |
+| ------ | ------ |
+| postgres_user_pass | OS user password|
+| postgres_db_pass | postgres user password|
+| pg_allowed_ipaddress | allowd network segment for db access  |
+| server_name | pleasanter server name or ip address |
 
-* set OS postgres user password
-postgres_user_pass: "**********"
-
-* set postgres db user password
-postgres_db_pass: "**********"
-
-* set allowd network segment for db access
-pg_allowed_ipaddress: "xx.xx.xx.xx/xx"
-
-* set server name or ip address on plesanter server
-server_name: "xx.xx.xx.xx"
-
-### Run playbook
+run ansible playbook
+```sh
 ansible-playbook -i inventory.ini pleasanter-setting.yml
+```
