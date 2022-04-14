@@ -8,6 +8,7 @@ install_packages_list:
 - "postgresql14-contrib"
 - "python3-devel"
 - "libpq-devel"
+- "unzip"
 
 systemd_enable_list:
 - "postgresql-14"

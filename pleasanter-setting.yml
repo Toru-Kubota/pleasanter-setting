@@ -1,6 +1,7 @@
 ---
 - hosts: plesanter_server
-
+  become: yes
+  
   tasks:
 
   - name: install repository
